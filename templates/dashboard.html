@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overall Sentiment Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .positive { color: #10b981; }
+        .negative { color: #ef4444; }
+        .neutral { color: #6b7280; }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Overall Sentiment Dashboard
+                    </h1>
+                    <p class="text-xl opacity-90">Complete analysis of all Amazon product reviews</p>
+                </div>
+                <a href="/" class="bg-white text-purple-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors font-semibold">
+                    <i class="fas fa-search mr-2"></i>Search Products
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Summary Statistics -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-chart-bar mr-3 text-purple-600"></i>Overall Statistics
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">Total Reviews</h3>
+                    <p class="text-3xl font-bold text-blue-600">{{ stats.total_reviews }}</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">Avg Title Polarity</h3>
+                    <p class="text-3xl font-bold text-purple-600">{{ stats.avg_title_polarity }}</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">Avg Content Polarity</h3>
+                    <p class="text-3xl font-bold text-green-600">{{ stats.avg_content_polarity }}</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-2">Avg Rating</h3>
+                    <p class="text-3xl font-bold text-yellow-600">{{ stats.avg_rating }}</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-chart-pie mr-3 text-purple-600"></i>Sentiment Distribution
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Review Title Sentiment</h3>
+                    <div class="chart-container">
+                        <canvas id="titleChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Review Content Sentiment</h3>
+                    <div class="chart-container">
+                        <canvas id="contentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Insights -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-lightbulb mr-3 text-purple-600"></i>Key Insights
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Sentiment Analysis</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <span class="text-gray-700 font-medium">Positive Reviews (Title):</span>
+                            <span class="font-bold text-green-600">
+                                {{ ((stats.title_sentiment_counts.get('Positive', 0) / stats.total_reviews) * 100)|round(1) }}%
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <span class="text-gray-700 font-medium">Positive Reviews (Content):</span>
+                            <span class="font-bold text-green-600">
+                                {{ ((stats.content_sentiment_counts.get('Positive', 0) / stats.total_reviews) * 100)|round(1) }}%
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <span class="text-gray-700 font-medium">Rating-Sentiment Correlation:</span>
+                            <span class="font-bold text-blue-600">{{ stats.rating_sentiment_corr }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Analysis Details</h3>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-blue-50 rounded">
+                            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                            <span class="text-gray-700">Analysis performed using TextBlob NLP library</span>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded">
+                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                            <span class="text-gray-700">{{ stats.total_reviews }} reviews analyzed successfully</span>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded">
+                            <i class="fas fa-database text-purple-600 mr-2"></i>
+                            <span class="text-gray-700">Amazon product reviews dataset</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sentiment Breakdown -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-list-ul mr-3 text-purple-600"></i>Detailed Breakdown
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Title Sentiment Breakdown</h3>
+                    <div class="space-y-3">
+                        {% for sentiment, count in stats.title_sentiment_counts.items() %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                {% if sentiment == 'Positive' %}
+                                    <i class="fas fa-smile text-green-500 mr-3"></i>
+                                {% elif sentiment == 'Negative' %}
+                                    <i class="fas fa-frown text-red-500 mr-3"></i>
+                                {% else %}
+                                    <i class="fas fa-meh text-gray-500 mr-3"></i>
+                                {% endif %}
+                                <span class="font-medium">{{ sentiment }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold">{{ count }}</span>
+                                <span class="text-gray-500 ml-2">
+                                    ({{ ((count / stats.total_reviews) * 100)|round(1) }}%)
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-6 card-shadow">
+                    <h3 class="text-lg font-semibold mb-4">Content Sentiment Breakdown</h3>
+                    <div class="space-y-3">
+                        {% for sentiment, count in stats.content_sentiment_counts.items() %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                {% if sentiment == 'Positive' %}
+                                    <i class="fas fa-smile text-green-500 mr-3"></i>
+                                {% elif sentiment == 'Negative' %}
+                                    <i class="fas fa-frown text-red-500 mr-3"></i>
+                                {% else %}
+                                    <i class="fas fa-meh text-gray-500 mr-3"></i>
+                                {% endif %}
+                                <span class="font-medium">{{ sentiment }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold">{{ count }}</span>
+                                <span class="text-gray-500 ml-2">
+                                    ({{ ((count / stats.total_reviews) * 100)|round(1) }}%)
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                <i class="fas fa-bolt mr-3 text-purple-600"></i>Quick Actions
+            </h2>
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/" class="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors text-center">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <p class="font-semibold">Search Products</p>
+                        <p class="text-sm opacity-90">Analyze specific products</p>
+                    </a>
+                    <a href="/download_results" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors text-center">
+                        <i class="fas fa-download text-2xl mb-2"></i>
+                        <p class="font-semibold">Download Results</p>
+                        <p class="text-sm opacity-90">Get CSV data</p>
+                    </a>
+                    <button onclick="window.print()" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors text-center">
+                        <i class="fas fa-print text-2xl mb-2"></i>
+                        <p class="font-semibold">Print Report</p>
+                        <p class="text-sm opacity-90">Generate PDF report</p>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-2">Amazon Product Sentiment Analysis Dashboard</p>
+            <p class="text-gray-400 text-sm">Powered by TextBlob NLP | Flask Web Application</p>
+        </div>
+    </footer>
+
+    <script>
+        // Pass Flask data to JavaScript
+        const titleSentimentData = {{ stats.title_sentiment_counts | tojson | safe }};
+        const contentSentimentData = {{ stats.content_sentiment_counts | tojson | safe }};
+        
+        // Chart.js configuration
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        };
+
+        // Title Sentiment Chart
+        const titleCtx = document.getElementById('titleChart').getContext('2d');
+        new Chart(titleCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(titleSentimentData),
+                datasets: [{
+                    data: Object.values(titleSentimentData),
+                    backgroundColor: ['#10b981', '#6b7280', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Content Sentiment Chart
+        const contentCtx = document.getElementById('contentChart').getContext('2d');
+        new Chart(contentCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(contentSentimentData),
+                datasets: [{
+                    data: Object.values(contentSentimentData),
+                    backgroundColor: ['#10b981', '#6b7280', '#ef4444'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: chartOptions
+        });
+    </script>
+</body>
+</html>

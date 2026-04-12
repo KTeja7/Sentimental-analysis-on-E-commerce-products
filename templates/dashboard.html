@@ -202,16 +202,11 @@
                 <i class="fas fa-bolt mr-3 text-purple-600"></i>Quick Actions
             </h2>
             <div class="bg-white rounded-lg p-6 card-shadow">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <a href="/" class="bg-purple-600 text-white p-4 rounded-lg hover:bg-purple-700 transition-colors text-center">
                         <i class="fas fa-search text-2xl mb-2"></i>
                         <p class="font-semibold">Search Products</p>
-                        <p class="text-sm opacity-90">Analyze specific products</p>
-                    </a>
-                    <a href="/download_results" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700 transition-colors text-center">
-                        <i class="fas fa-download text-2xl mb-2"></i>
-                        <p class="font-semibold">Download Results</p>
-                        <p class="text-sm opacity-90">Get CSV data</p>
+                        <p class="text-sm opacity-90">Analyze products</p>
                     </a>
                     <button onclick="window.print()" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700 transition-colors text-center">
                         <i class="fas fa-print text-2xl mb-2"></i>
@@ -221,6 +216,20 @@
                 </div>
             </div>
         </section>
+
+        <!-- Download Section -->
+        <section class="mb-8">
+            <div class="text-center">
+                <button id="dashboardDownloadBtn" class="bg-green-600 text-white px-8 py-4 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-download mr-3"></i>Download Complete Analysis (CSV)
+                </button>
+                <p class="text-gray-600 text-sm mt-3">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Get detailed sentiment analysis of all products in CSV format
+                </p>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -277,6 +286,19 @@
                 }]
             },
             options: chartOptions
+        });
+
+        // Dashboard Download functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadBtn = document.getElementById('dashboardDownloadBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', function() {
+                    console.log('Download button clicked');
+                    window.location.href = '/download_dashboard_results';
+                });
+            } else {
+                console.error('Download button not found');
+            }
         });
     </script>
 </body>
